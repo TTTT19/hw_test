@@ -2,6 +2,7 @@ import unittest
 import requests
 from unittest.mock import patch
 import app
+import copy
 
 
 # проверка приложения
@@ -21,6 +22,28 @@ class TestFunction(unittest.TestCase):
         with patch('app.input', return_value='11-2'):
             app.delete_doc()
         self.assertNotEqual(docs_before_del, len(self.docs))
+
+    def test_get_all_doc_owners_names(self):
+        dict = {}
+        self.assertIsNot(app.get_all_doc_owners_names().__class__, dict.__class__)
+
+    def test_remove_doc_from_shelf(self):
+        before_del = copy.deepcopy(self.dirs)
+        app.remove_doc_from_shelf('11-2')
+        self.assertNotEqual(self.dirs, before_del)
+
+    def test_add_new_shelf(self):
+        before_add = copy.deepcopy(self.dirs)
+        with patch('app.input', return_value='5'):
+            app.add_new_shelf()
+        self.assertNotEqual(self.dirs, before_add)
+
+    def test_add_new_doc(self):
+        new_doc_number = '12345'
+        new_shelf_for_new_doc = '5'
+        with patch('app.input', side_effect=[new_doc_number, 'passport', 'Ivan Ivanov', new_shelf_for_new_doc]):
+            app.add_new_doc()
+            self.assertEqual(self.dirs[new_shelf_for_new_doc][0], new_doc_number)
 
 
 # проверка яндекса
@@ -55,17 +78,11 @@ def translate_it(text):
 
 class TestFunctionYandex(unittest.TestCase):
 
-    def test_translate(self):
-        try:
-            self.assertEqual(translate_it('hi')['code'], 200)
-        except Exception as e:
-            print('Не получен ответ 200')
-            print(e.__class__)
-        try:
-            self.assertEqual(translate_it('hi')['text'][0], "привет")
-        except Exception as e:
-            print('Ошибка в тексте')
-            print(e.__class__)
+    def test_translate_code(self):
+        self.assertEqual(translate_it('hi')['code'], 200)
+
+    def test_translate_answer(self):
+        self.assertEqual(translate_it('hi')['text'][0], "привет")
 
 
 if __name__ == '__main__':
